@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-import requests
+import json
+from urllib import error, parse, request
 
 from odoo import fields, models, api, exceptions
 
@@ -73,19 +74,27 @@ class WechatSetting(models.Model):
         from wechatpy.enterprise import WeChatClient
 
         client = WeChatClient(self.wechat_corp_id, self.wechat_secret)
-        response = requests.post(
-            'https://qyapi.weixin.qq.com/cgi-bin/externalcontact/groupchat/send',
-            params={'access_token': client.access_token},
-            json={
-                'chat_id': self.wechat_supplier_group_chat_id,
-                'msgtype': 'text',
-                'text': {
-                    'content': text,
-                }
-            },
-            timeout=10,
+        url = 'https://qyapi.weixin.qq.com/cgi-bin/externalcontact/groupchat/send?%s' % parse.urlencode(
+            {'access_token': client.access_token}
         )
-        response.raise_for_status()
-        result = response.json()
+        payload = json.dumps({
+            'chat_id': self.wechat_supplier_group_chat_id,
+            'msgtype': 'text',
+            'text': {
+                'content': text,
+            }
+        }).encode('utf-8')
+        req = request.Request(
+            url=url,
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='POST',
+        )
+        try:
+            with request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+        except error.URLError as exc:
+            raise exceptions.UserError(f"企业微信发送外部群消息请求失败：{exc}") from exc
+
         if result.get('errcode'):
             raise exceptions.UserError(f"企业微信发送外部群消息失败：{result.get('errmsg')}")
