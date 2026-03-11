@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 class WechatSetting(models.Model):
     _name = 'wechat.setting'
     _description = '企业微信配置'
-    
+
     active = fields.Boolean('Active', default=True)
     company_id = fields.Many2one('res.company', string="公司", required=True, default=lambda self: self.env.company)
     name = fields.Char(string="企业名称", required=True)
