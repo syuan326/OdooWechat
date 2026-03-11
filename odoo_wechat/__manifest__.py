@@ -7,7 +7,7 @@
     'website': "https://github.com/cd-feng",
     'category': 'Wechat/基础',
     'version': '18.0.0.1',
-    'depends': ['hr'],
+    'depends': ['hr', 'purchase'],
     "license": "AGPL-3",
     'installable': True,
     'application': True,
